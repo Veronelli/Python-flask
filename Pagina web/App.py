@@ -58,17 +58,51 @@ def add_contact():
 
 
 
-@app.route('/edit_contact')
 
-def editar():
+@app.route('/edit_contact/<id>')
 
-    return 'Edit contact'
+def editar(id):
 
-@app.route('/delete')
+    cur = mysql.connection.cursor()
+    cur.execute('SELECT * FROM contacts WHERE  id = %s', (id))#Selecciona el valor del id e insertalo en sql)
+    data = cur.fetchall()
+    print(data)
+    return render_template('edit-contact.html', contact = data[0])
 
-def delete_contact():
+#Informacion para actualizar
+@app.route('/update/<id>', methods = ['POST'])
 
-    return 'Delete Contact'
+def update_contact(id):
+    
+    if request.method == 'POST':
+        fullname = request.form['fullname']
+        phone = request.form['phone']
+        email = request.form['email']
+        
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            UPDATE contacts
+            SET fullname = %s,
+            phone = %s,
+            email = %s
+            WHERE id = %s
+        """, (fullname, phone, email, id))
+        mysql.connection.commit()
+        flash('Contact Updated Successfully')
+        
+        return redirect(url_for('Index'))
+
+
+@app.route('/delete/<string:id>')
+
+def delete_contact(id):
+
+    cur = mysql.connection.cursor()
+    cur.execute('DELETE FROM contacts WHERE id = {0}'. format(id))#Donde esta el cero premplaza con una id
+    mysql.connection.commit()
+    
+    flash('Contanct Removed Successfully')
+    return redirect(url_for('Index'))
 
  #Verificar que se este ajecutando en app
 if __name__ =='__main__':
